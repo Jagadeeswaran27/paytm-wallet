@@ -45,4 +45,4 @@ app.*.map.json
 /android/app/release
 
 # Sensitive environment variables
-.env*!.env.example
+.env*
