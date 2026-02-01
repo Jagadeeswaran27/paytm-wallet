@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -11,8 +10,10 @@ import 'package:app/providers/walllet_providers.dart';
 import 'package:app/utils/payment_util.dart';
 import 'package:app/utils/navigation.dart';
 import 'package:app/widgets/custom_snackbar.dart';
+import 'package:app/widgets/payment_card_shimmer.dart';
 import 'package:app/models/payment_card.dart';
 import 'package:app/resources/icons.dart';
+import 'package:app/utils/decimal_max_value_formatter.dart';
 
 class AddMoneyScreen extends ConsumerStatefulWidget {
   const AddMoneyScreen({super.key});
@@ -29,20 +30,6 @@ class _AddMoneyScreenState extends ConsumerState<AddMoneyScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final paymentCardsState = ref.read(paymentMethodControllerProvider);
-      paymentCardsState.whenOrNull(
-        data: (cards) {
-          final defaultCard = cards.firstWhere(
-            (card) => card.isDefault,
-            orElse: () => cards.isNotEmpty ? cards.first : cards.first,
-          );
-          setState(() {
-            _selectedPaymentMethodId = defaultCard.id;
-          });
-        },
-      );
-    });
   }
 
   @override
@@ -85,9 +72,7 @@ class _AddMoneyScreenState extends ConsumerState<AddMoneyScreen> {
 
   void _handleAddMoney() {
     final amount = double.tryParse(_amountController.text) ?? 0;
-    ref
-        .read(walletControllerProvider.notifier)
-        .addWalletBalance(amount.toInt());
+    ref.read(walletControllerProvider.notifier).addWalletBalance(amount);
   }
 
   @override
@@ -96,6 +81,15 @@ class _AddMoneyScreenState extends ConsumerState<AddMoneyScreen> {
     final user = userState.value;
     final paymentCardsState = ref.watch(paymentMethodControllerProvider);
     final walletState = ref.watch(walletControllerProvider);
+
+    final cards = paymentCardsState.value;
+
+    if (cards != null && cards.isNotEmpty && _selectedPaymentMethodId == null) {
+      try {
+        final defaultCard = cards.firstWhere((card) => card.isDefault);
+        _selectedPaymentMethodId = defaultCard.id;
+      } catch (_) {}
+    }
 
     ref.listen(walletControllerProvider, (previous, next) {
       next.whenOrNull(
@@ -184,11 +178,12 @@ class _AddMoneyScreenState extends ConsumerState<AddMoneyScreen> {
             const SizedBox(height: 12),
             TextField(
               controller: _amountController,
-              keyboardType: TextInputType.number,
               inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                MaxValueTextInputFormatter(50000),
+                DecimalMaxValueFormatter(maxValue: 50000, decimalPlaces: 2),
               ],
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               onChanged: _onAmountChanged,
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               decoration: InputDecoration(
@@ -316,7 +311,12 @@ class _AddMoneyScreenState extends ConsumerState<AddMoneyScreen> {
                   }).toList(),
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => Column(
+                children: List.generate(
+                  3,
+                  (index) => const PaymentCardShimmer(),
+                ),
+              ),
               error: (error, _) => Text('Error: $error'),
             ),
             const SizedBox(height: 32),
@@ -436,26 +436,5 @@ class _AddMoneyScreenState extends ConsumerState<AddMoneyScreen> {
         ),
       ),
     );
-  }
-}
-
-class MaxValueTextInputFormatter extends TextInputFormatter {
-  final int maxValue;
-
-  MaxValueTextInputFormatter(this.maxValue);
-
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    if (newValue.text.isEmpty) {
-      return newValue;
-    }
-    final int? value = int.tryParse(newValue.text);
-    if (value != null && value <= maxValue) {
-      return newValue;
-    }
-    return oldValue;
   }
 }

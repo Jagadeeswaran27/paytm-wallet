@@ -35,7 +35,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       AppRoutes.addMoney.route,
       AppRoutes.sendMoney.route,
       AppRoutes.profile.route,
-      AppRoutes.pin.route,
     ],
     redirect: (context, state) {
       final authUserState = ref.read(authStateChangesProvider);

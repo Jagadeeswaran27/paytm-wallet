@@ -4,11 +4,12 @@ import 'package:app/controllers/payment_method_controller.dart';
 import 'package:app/models/payment_card.dart';
 import 'package:app/core/services/payment_method_service.dart';
 
-final paymentMethodServiceProvider = Provider<PaymentService>((ref) {
-  return PaymentService.instance;
+final paymentMethodServiceProvider = Provider<PaymentMethodService>((ref) {
+  return PaymentMethodService.instance;
 });
 
 final paymentMethodControllerProvider =
-    AsyncNotifierProvider.autoDispose<PaymentController, List<PaymentCard>>(
-      () => PaymentController(),
-    );
+    AsyncNotifierProvider.autoDispose<
+      PaymentMethodController,
+      List<PaymentCard>
+    >(() => PaymentMethodController());

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import 'package:app/router/app_routes.dart';
 import 'package:app/core/theme/app_theme.dart';
 import 'package:app/providers/auth_provider.dart';
 import 'package:app/utils/navigation.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:app/widgets/custom_snackbar.dart';
 import 'package:app/models/user_model.dart';
 
 class AccountScreen extends ConsumerWidget {
@@ -71,7 +72,6 @@ class AccountScreen extends ConsumerWidget {
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-
                       children: [
                         Text(
                           user.name ?? 'User',
@@ -91,8 +91,6 @@ class AccountScreen extends ConsumerWidget {
                 ],
               ),
             ),
-
-          // Options List
           _buildOptionItem(
             context,
             icon: Icons.person_outline_rounded,
@@ -109,14 +107,14 @@ class AccountScreen extends ConsumerWidget {
             title: 'Set PIN',
             subtitle: 'Secure your wallet',
             onTap: () {
-              pushToScreen(context, AppRoutes.pin.path);
+              CustomSnackBar.show(
+                context,
+                message: "Set Pin feature will be available soon",
+              );
             },
           ),
           _buildDivider(),
-
           const SizedBox(height: 32),
-
-          // Logout Button
           OutlinedButton(
             onPressed: () async {
               await ref.read(authControllerProvider.notifier).signOut();

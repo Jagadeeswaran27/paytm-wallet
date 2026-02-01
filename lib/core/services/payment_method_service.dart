@@ -5,10 +5,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:app/models/errors/failure.dart';
 import 'package:app/models/payment_card.dart';
 
-class PaymentService {
-  PaymentService._();
+class PaymentMethodService {
+  PaymentMethodService._();
 
-  static final PaymentService instance = PaymentService._();
+  static final PaymentMethodService instance = PaymentMethodService._();
 
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

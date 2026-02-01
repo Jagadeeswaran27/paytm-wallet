@@ -7,7 +7,7 @@ import 'package:app/providers/payment_method_providers.dart';
 import 'package:app/utils/payment_util.dart';
 import 'package:fpdart/fpdart.dart';
 
-class PaymentController extends AsyncNotifier<List<PaymentCard>> {
+class PaymentMethodController extends AsyncNotifier<List<PaymentCard>> {
   @override
   Future<List<PaymentCard>> build() async {
     state = AsyncValue.loading();

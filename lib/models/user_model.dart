@@ -2,7 +2,7 @@ class UserModel {
   final String uid;
   final String phone;
   final bool isOnboardCompleted;
-  final num walletBalance;
+  final double walletBalance;
   final String? name;
   final String? email;
   final String? state;
@@ -39,7 +39,7 @@ class UserModel {
     String? uid,
     String? phone,
     bool? isOnboardCompleted,
-    num? walletBalance,
+    double? walletBalance,
     String? name,
     String? email,
     String? state,

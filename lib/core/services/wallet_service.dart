@@ -12,7 +12,7 @@ class WalletService {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<Either<Failure, void>> addWalletBalance(int amount) async {
+  Future<Either<Failure, void>> addWalletBalance(double amount) async {
     try {
       final user = _firebaseAuth.currentUser;
 

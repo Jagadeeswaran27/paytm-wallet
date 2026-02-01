@@ -3,16 +3,51 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:app/router/app_routes.dart';
+import 'package:app/widgets/custom_snackbar.dart';
 import 'package:app/utils/payment_util.dart';
 import 'package:app/utils/navigation.dart';
 import 'package:app/core/theme/app_theme.dart';
 import 'package:app/providers/auth_provider.dart';
+import 'package:app/providers/payment_providers.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  final TextEditingController _upiController = TextEditingController();
+
+  @override
+  void dispose() {
+    _upiController.dispose();
+    super.dispose();
+  }
+
+  void _handleUpiSubmit() async {
+    final upiId = _upiController.text.trim();
+
+    final upiRegex = RegExp(r'^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$');
+
+    if (upiRegex.hasMatch(upiId)) {
+      await ref
+          .read(paymentControllerProvider.notifier)
+          .storeUpiId(upiId: upiId);
+      _upiController.clear();
+      pushToScreen(context, AppRoutes.sendMoney.path);
+    } else {
+      CustomSnackBar.show(
+        context,
+        message: 'Please enter a valid UPI ID',
+        isError: true,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final userState = ref.watch(authStateChangesProvider);
     final user = userState.value;
 
@@ -72,7 +107,7 @@ class HomeScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Available Balance',
+                        'Available Wallet Balance',
                         style: TextStyle(
                           color: Colors.white70,
                           fontSize: 16,
@@ -89,41 +124,6 @@ class HomeScreen extends ConsumerWidget {
                             ),
                       ),
                     ],
-                  ),
-                  Material(
-                    color: Colors.white.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(30),
-                    child: InkWell(
-                      onTap: () {
-                        // TODO: Implement Spend action
-                      },
-                      borderRadius: BorderRadius.circular(30),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 6,
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.payment,
-                              color: Colors.white,
-                              size: 18,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Spend',
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
                   ),
                 ],
               ),
@@ -147,15 +147,15 @@ class HomeScreen extends ConsumerWidget {
                   icon: Icons.add_card,
                   label: 'Add Money',
                   onTap: () {
-                    // TODO: Navigate to Add Money
+                    pushToScreen(context, AppRoutes.addMoney.path);
                   },
                 ),
                 _buildQuickActionButton(
                   context,
-                  icon: Icons.account_balance_wallet,
-                  label: 'Wallet',
+                  icon: Icons.history,
+                  label: 'Transactions',
                   onTap: () {
-                    pushToScreen(context, AppRoutes.wallet.path);
+                    // TODO: Transactions
                   },
                 ),
                 _buildQuickActionButton(
@@ -163,7 +163,7 @@ class HomeScreen extends ConsumerWidget {
                   icon: Icons.shopping_cart,
                   label: 'Cart',
                   onTap: () {
-                    pushToScreen(context, AppRoutes.cart.path);
+                    goToScreen(context, AppRoutes.cart.path);
                   },
                 ),
               ],
@@ -279,7 +279,8 @@ class HomeScreen extends ConsumerWidget {
             children: [
               Expanded(
                 child: TextField(
-                  keyboardType: TextInputType.text,
+                  controller: _upiController,
+                  keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     hintText: 'Enter UPI ID or Number',
                     hintStyle: TextStyle(
@@ -321,10 +322,7 @@ class HomeScreen extends ConsumerWidget {
                 color: AppColors.primary,
                 borderRadius: BorderRadius.circular(16),
                 child: InkWell(
-                  onTap: () {
-                    // Navigate to Send Money Screen
-                    pushToScreen(context, AppRoutes.sendMoney.path);
-                  },
+                  onTap: _handleUpiSubmit,
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
                     padding: const EdgeInsets.all(14),

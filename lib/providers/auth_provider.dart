@@ -45,9 +45,15 @@ class AuthUserStateNotifier extends StreamNotifier<UserModel?> {
     state = AsyncValue.data(newUser);
   }
 
-  void updateUserWalletBalance(int amount) {
+  void updateUserWalletBalance(double amount) {
     state = AsyncValue.data(
       state.value?.copyWith(walletBalance: state.value!.walletBalance + amount),
+    );
+  }
+
+  void reduceUserWalletBalance(double amount) {
+    state = AsyncValue.data(
+      state.value?.copyWith(walletBalance: state.value!.walletBalance - amount),
     );
   }
 }

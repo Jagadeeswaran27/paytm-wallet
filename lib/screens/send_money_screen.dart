@@ -1,37 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:app/router/app_routes.dart';
 import 'package:app/core/theme/app_theme.dart';
 import 'package:app/providers/auth_provider.dart';
 import 'package:app/providers/payment_method_providers.dart';
-// import 'package:app/providers/walllet_providers.dart'; // Typo fix if needed, but keeping consistency
+import 'package:app/providers/payment_providers.dart';
 import 'package:app/utils/payment_util.dart';
-// import 'package:app/widgets/custom_snackbar.dart';
+import 'package:app/widgets/custom_snackbar.dart';
+import 'package:app/utils/navigation.dart';
 import 'package:app/models/payment_card.dart';
+
 import 'package:app/resources/icons.dart';
-
-// Helper for Amount Input formatting from AddMoneyScreen
-class MaxValueTextInputFormatter extends TextInputFormatter {
-  final int maxValue;
-
-  MaxValueTextInputFormatter(this.maxValue);
-
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    if (newValue.text.isEmpty) {
-      return newValue;
-    }
-    final int? value = int.tryParse(newValue.text);
-    if (value != null && value <= maxValue) {
-      return newValue;
-    }
-    return oldValue;
-  }
-}
+import 'package:app/utils/decimal_max_value_formatter.dart';
 
 class SendMoneyScreen extends ConsumerStatefulWidget {
   const SendMoneyScreen({super.key});
@@ -43,7 +25,6 @@ class SendMoneyScreen extends ConsumerStatefulWidget {
 class _SendMoneyScreenState extends ConsumerState<SendMoneyScreen> {
   final TextEditingController _amountController = TextEditingController();
 
-  // "wallet" or card ID
   String _selectedSourceId = 'wallet';
 
   @override
@@ -80,12 +61,11 @@ class _SendMoneyScreenState extends ConsumerState<SendMoneyScreen> {
   }
 
   void _handlePay() {
-    // Mock Pay Action
     final amount = double.tryParse(_amountController.text) ?? 0;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Processing Payment of ₹$amount...')),
-    );
-    // In real app, would call a provider to process transaction
+
+    ref
+        .read(paymentControllerProvider.notifier)
+        .sendMoney(amount: amount, source: _selectedSourceId);
   }
 
   @override
@@ -93,11 +73,28 @@ class _SendMoneyScreenState extends ConsumerState<SendMoneyScreen> {
     final userState = ref.watch(authStateChangesProvider);
     final user = userState.value;
     final paymentCardsState = ref.watch(paymentMethodControllerProvider);
+    final paymentState = ref.watch(paymentControllerProvider);
+
+    ref.listen<AsyncValue<void>>(paymentControllerProvider, (previous, next) {
+      next.whenOrNull(
+        error: (error, stackTrace) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(error.toString()),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        },
+        data: (_) {
+          CustomSnackBar.show(context, message: 'Payment Successful!');
+          goToScreen(context, AppRoutes.home.path);
+        },
+      );
+    });
 
     final amountText = _amountController.text;
     final amount = double.tryParse(amountText) ?? 0;
 
-    // Simple validation: min 1, max wallet balance if wallet selected
     bool isBalanceSufficient = true;
     if (_selectedSourceId == 'wallet' && user != null) {
       isBalanceSufficient = amount <= user.walletBalance;
@@ -123,6 +120,52 @@ class _SendMoneyScreenState extends ConsumerState<SendMoneyScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (paymentState.value != null)
+              Container(
+                margin: const EdgeInsets.only(bottom: 20),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                ),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: AppColors.primary.withOpacity(0.1),
+                      child: Text(
+                        paymentState.value![0].toUpperCase(),
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Paying to',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          paymentState.value!,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             // Enter Amount Section
             const Text(
               'Enter Amount',
@@ -135,10 +178,11 @@ class _SendMoneyScreenState extends ConsumerState<SendMoneyScreen> {
             const SizedBox(height: 12),
             TextField(
               controller: _amountController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                MaxValueTextInputFormatter(50000),
+                DecimalMaxValueFormatter(maxValue: 50000, decimalPlaces: 2),
               ],
               onChanged: _onAmountChanged,
               style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
@@ -290,7 +334,9 @@ class _SendMoneyScreenState extends ConsumerState<SendMoneyScreen> {
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: ElevatedButton(
-            onPressed: isButtonEnabled ? _handlePay : null,
+            onPressed: isButtonEnabled && !paymentState.isLoading
+                ? _handlePay
+                : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
@@ -300,10 +346,22 @@ class _SendMoneyScreenState extends ConsumerState<SendMoneyScreen> {
               ),
               disabledBackgroundColor: Colors.grey.shade300,
             ),
-            child: Text(
-              'Pay ${PaymentUtil.formatAmount(amount)}',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+            child: paymentState.isLoading
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : Text(
+                    'Pay ${PaymentUtil.formatAmount(amount)}',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
           ),
         ),
       ),

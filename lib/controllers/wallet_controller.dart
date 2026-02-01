@@ -11,7 +11,7 @@ class WalletController extends AsyncNotifier<void> {
     return null;
   }
 
-  Future<void> addWalletBalance(int amount) async {
+  Future<void> addWalletBalance(double amount) async {
     state = AsyncValue.loading();
 
     final result = await ref

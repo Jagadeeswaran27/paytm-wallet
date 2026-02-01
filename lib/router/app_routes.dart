@@ -12,7 +12,6 @@ import 'package:app/screens/loading_screen.dart';
 import 'package:app/screens/wallet_screen.dart';
 import 'package:app/screens/cart_screen.dart';
 import 'package:app/screens/account_screen.dart';
-import 'package:app/screens/pin_screen.dart';
 import 'package:app/screens/add_funding_source_screen.dart';
 import 'package:app/screens/add_money_screen.dart';
 import 'package:app/screens/send_money_screen.dart';
@@ -28,7 +27,6 @@ enum AppRoutes {
   wallet,
   cart,
   account,
-  pin,
   addFundingSource,
   addMoney,
   sendMoney,
@@ -47,7 +45,6 @@ extension AppRoutesExtension on AppRoutes {
     AppRoutes.wallet: '/wallet',
     AppRoutes.cart: '/cart',
     AppRoutes.account: '/account',
-    AppRoutes.pin: '/pin',
     AppRoutes.addFundingSource: '/add-funding-source',
     AppRoutes.addMoney: '/add-money',
     AppRoutes.sendMoney: '/send-money',
@@ -64,7 +61,6 @@ extension AppRoutesExtension on AppRoutes {
     AppRoutes.wallet: 'wallet',
     AppRoutes.cart: 'cart',
     AppRoutes.account: 'account',
-    AppRoutes.pin: 'pin',
     AppRoutes.addFundingSource: 'add-funding-source',
     AppRoutes.addMoney: 'add-money',
     AppRoutes.sendMoney: 'send-money',
@@ -81,7 +77,6 @@ extension AppRoutesExtension on AppRoutes {
     AppRoutes.wallet: WalletScreen.new,
     AppRoutes.cart: CartScreen.new,
     AppRoutes.account: AccountScreen.new,
-    AppRoutes.pin: PinScreen.new,
     AppRoutes.addFundingSource: AddFundingSourceScreen.new,
     AppRoutes.addMoney: AddMoneyScreen.new,
     AppRoutes.sendMoney: SendMoneyScreen.new,
