@@ -15,6 +15,7 @@ import 'package:app/screens/account_screen.dart';
 import 'package:app/screens/add_funding_source_screen.dart';
 import 'package:app/screens/add_money_screen.dart';
 import 'package:app/screens/send_money_screen.dart';
+import 'package:app/screens/transactions_screen.dart';
 
 enum AppRoutes {
   welcome,
@@ -30,6 +31,7 @@ enum AppRoutes {
   addFundingSource,
   addMoney,
   sendMoney,
+  transactions,
   routes,
 }
 
@@ -48,6 +50,7 @@ extension AppRoutesExtension on AppRoutes {
     AppRoutes.addFundingSource: '/add-funding-source',
     AppRoutes.addMoney: '/add-money',
     AppRoutes.sendMoney: '/send-money',
+    AppRoutes.transactions: '/transactions',
   };
 
   static const Map<AppRoutes, String> _names = {
@@ -64,6 +67,7 @@ extension AppRoutesExtension on AppRoutes {
     AppRoutes.addFundingSource: 'add-funding-source',
     AppRoutes.addMoney: 'add-money',
     AppRoutes.sendMoney: 'send-money',
+    AppRoutes.transactions: 'transactions',
   };
 
   static const Map<AppRoutes, Widget Function()> _builders = {
@@ -80,6 +84,7 @@ extension AppRoutesExtension on AppRoutes {
     AppRoutes.addFundingSource: AddFundingSourceScreen.new,
     AppRoutes.addMoney: AddMoneyScreen.new,
     AppRoutes.sendMoney: SendMoneyScreen.new,
+    AppRoutes.transactions: TransactionsScreen.new,
   };
 
   String get path => _paths[this]!;

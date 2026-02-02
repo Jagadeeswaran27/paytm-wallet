@@ -72,7 +72,12 @@ class _AddMoneyScreenState extends ConsumerState<AddMoneyScreen> {
 
   void _handleAddMoney() {
     final amount = double.tryParse(_amountController.text) ?? 0;
-    ref.read(walletControllerProvider.notifier).addWalletBalance(amount);
+    ref
+        .read(walletControllerProvider.notifier)
+        .addWalletBalance(
+          amount: amount,
+          sourceCardId: _selectedPaymentMethodId!,
+        );
   }
 
   @override

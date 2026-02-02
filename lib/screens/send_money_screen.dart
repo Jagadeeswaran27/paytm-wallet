@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:app/models/enums/payment_type.dart';
 import 'package:app/router/app_routes.dart';
 import 'package:app/core/theme/app_theme.dart';
 import 'package:app/providers/auth_provider.dart';
@@ -11,7 +12,6 @@ import 'package:app/utils/payment_util.dart';
 import 'package:app/widgets/custom_snackbar.dart';
 import 'package:app/utils/navigation.dart';
 import 'package:app/models/payment_card.dart';
-
 import 'package:app/resources/icons.dart';
 import 'package:app/utils/decimal_max_value_formatter.dart';
 
@@ -65,7 +65,7 @@ class _SendMoneyScreenState extends ConsumerState<SendMoneyScreen> {
 
     ref
         .read(paymentControllerProvider.notifier)
-        .sendMoney(amount: amount, source: _selectedSourceId);
+        .sendMoney(amount: amount, paymentType: PaymentType.wallet);
   }
 
   @override

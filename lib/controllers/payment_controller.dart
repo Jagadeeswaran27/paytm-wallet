@@ -1,5 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:app/providers/transaction_providers.dart';
+import 'package:app/models/transaction_model.dart';
+import 'package:app/models/enums/payment_type.dart';
 import 'package:app/providers/payment_providers.dart';
 import 'package:app/providers/auth_provider.dart';
 
@@ -16,11 +19,12 @@ class PaymentController extends AsyncNotifier<String?> {
 
   Future<void> sendMoney({
     required double amount,
-    required String source,
+    required PaymentType paymentType,
+    String? sourceCardId,
   }) async {
     state = const AsyncValue.loading();
 
-    if (source == 'wallet') {
+    if (paymentType == PaymentType.wallet) {
       final result = await ref
           .read(paymentServiceProvider)
           .sendMoney(amount: amount);
@@ -28,15 +32,36 @@ class PaymentController extends AsyncNotifier<String?> {
       result.fold(
         (failure) =>
             state = AsyncValue.error(failure.message, StackTrace.current),
-        (_) {
+        (_) async {
           ref
               .read(authStateChangesProvider.notifier)
               .reduceUserWalletBalance(amount);
-          state = AsyncValue.data(null);
+
+          final transactionResult = await ref
+              .read(transactionServiceProvider)
+              .addTransaction(
+                transaction: TransactionModel(
+                  id: '',
+                  amount: amount,
+                  paymentType: PaymentType.wallet,
+                  destinationUpiId: state.value!,
+                ),
+              );
+
+          transactionResult.fold(
+            (failure) =>
+                state = AsyncValue.error(failure.message, StackTrace.current),
+            (transaction) {
+              ref
+                  .read(transactionControllerProvider.notifier)
+                  .updateTransaction(transaction);
+              state = AsyncValue.data(null);
+            },
+          );
         },
       );
     } else {
-      await Future.delayed(const Duration(seconds: 1));
+      Future.delayed(const Duration(seconds: 2));
       state = const AsyncValue.data(null);
     }
   }

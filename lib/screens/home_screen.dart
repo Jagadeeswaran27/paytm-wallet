@@ -155,7 +155,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   icon: Icons.history,
                   label: 'Transactions',
                   onTap: () {
-                    // TODO: Transactions
+                    pushToScreen(context, AppRoutes.transactions.path);
                   },
                 ),
                 _buildQuickActionButton(
