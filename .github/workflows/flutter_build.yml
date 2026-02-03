@@ -3,7 +3,7 @@ name: Flutter Develop Build
 on:
   push:
     branches:
-      - feat/develop
+      - develop
 
 concurrency:
   group: build-${{ github.ref }}
