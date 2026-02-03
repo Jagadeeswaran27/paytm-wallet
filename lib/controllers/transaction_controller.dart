@@ -24,7 +24,9 @@ class TransactionController extends AsyncNotifier<List<TransactionModel>> {
 
   Future<void> updateTransaction(TransactionModel newTransaction) async {
     state = const AsyncValue.loading();
-    state = AsyncValue.data([...state.value!, newTransaction]);
+    if (state.value != null) {
+      state = AsyncValue.data([...state.value!, newTransaction]);
+    }
   }
 
   // Future<void> addTransaction({
