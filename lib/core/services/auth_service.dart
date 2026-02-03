@@ -18,27 +18,30 @@ class AuthService {
   Stream<PhoneAuthResult> verifyPhoneNumber({
     required String phoneNumber,
     int? resendToken,
-  }) async* {
-    final controller = StreamController<PhoneAuthResult>();
+  }) {
+    final controller = StreamController<PhoneAuthResult>.broadcast();
 
-    await _firebaseAuth.verifyPhoneNumber(
+    _firebaseAuth.verifyPhoneNumber(
       phoneNumber: phoneNumber,
       forceResendingToken: resendToken,
       codeSent: (verId, token) {
         controller.add(CodeSent(verId, token));
+        controller.close();
       },
       verificationFailed: (e) {
-        controller.add(PhoneAuthError("Verification Failed"));
+        controller.add(PhoneAuthError(e.message ?? "Verification Failed"));
         controller.close();
       },
-      verificationCompleted: (PhoneAuthCredential credential) {
+      verificationCompleted: (credential) {
+        controller.add(PhoneAuthCompleted(credential));
         controller.close();
       },
-      codeAutoRetrievalTimeout: (String verificationId) {},
+      codeAutoRetrievalTimeout: (id) {
+        controller.close();
+      },
     );
 
-    yield* controller.stream;
-    controller.close();
+    return controller.stream;
   }
 
   Future<Either<Failure, UserModel>> signInWithOtp({
@@ -84,6 +87,8 @@ class AuthService {
       }
 
       return Right(UserModel.fromMap(userDoc.data() as Map<String, dynamic>));
+    } on FirebaseAuthException catch (e) {
+      return Left(Failure(e.message ?? "Verification Failed"));
     } catch (e) {
       return Left(Failure(e.toString()));
     }

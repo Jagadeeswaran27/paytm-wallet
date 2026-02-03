@@ -14,32 +14,33 @@ class AuthController extends AsyncNotifier<PhoneAuthState> {
     return const PhoneAuthState();
   }
 
-  Future<void> verifyPhoneNumber(String phoneNumber, {int? resendToken}) async {
+  Future<String?> verifyPhoneNumber(
+    String phoneNumber, {
+    int? resendToken,
+  }) async {
     state = const AsyncValue.loading();
-    try {
-      final stream = ref
-          .read(authServiceProvider)
-          .verifyPhoneNumber(
-            phoneNumber: phoneNumber,
-            resendToken: resendToken,
-          );
+    final stream = ref
+        .read(authServiceProvider)
+        .verifyPhoneNumber(
+          phoneNumber: phoneNumber,
+          resendToken: resendToken ?? state.value?.resendToken,
+        );
 
-      await for (final result in stream) {
-        if (result is CodeSent) {
-          state = AsyncValue.data(
-            PhoneAuthState(
-              verificationId: result.verificationId,
-              resendToken: result.resendToken,
-              phoneNumber: phoneNumber,
-            ),
-          );
-        } else if (result is PhoneAuthError) {
-          state = AsyncValue.error(result.message, StackTrace.current);
-        }
+    await for (final result in stream) {
+      if (result is CodeSent) {
+        state = AsyncValue.data(
+          PhoneAuthState(
+            verificationId: result.verificationId,
+            resendToken: result.resendToken,
+            phoneNumber: phoneNumber,
+          ),
+        );
+      } else if (result is PhoneAuthError) {
+        state = AsyncValue.error(result.message, StackTrace.current);
+        return result.message;
       }
-    } catch (e) {
-      state = AsyncValue.error(e, StackTrace.current);
     }
+    return null;
   }
 
   Future<String?> signInWithOtp({required String smsCode}) async {

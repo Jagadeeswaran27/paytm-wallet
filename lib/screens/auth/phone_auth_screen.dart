@@ -39,9 +39,13 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> {
       return;
     }
 
-    await ref
+    final error = await ref
         .read(authControllerProvider.notifier)
         .verifyPhoneNumber('+91$phone');
+
+    if (error != null && mounted) {
+      CustomSnackBar.show(context, message: error, isError: true);
+    }
   }
 
   @override
@@ -50,13 +54,7 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> {
     final isLoading = authState.isLoading;
 
     ref.listen(authControllerProvider, (previous, next) {
-      if (next.hasError) {
-        CustomSnackBar.show(
-          context,
-          message: next.error.toString(),
-          isError: true,
-        );
-      } else if (!next.isLoading && next.value?.verificationId != null) {
+      if (!next.isLoading && next.value?.verificationId != null) {
         _phoneController.clear();
         if (ModalRoute.of(context)?.isCurrent == true) {
           pushToScreen(context, AppRoutes.otp.path);

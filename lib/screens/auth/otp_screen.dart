@@ -80,6 +80,10 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
         .read(authControllerProvider.notifier)
         .signInWithOtp(smsCode: otp);
 
+    setState(() {
+      _isLoading = false;
+    });
+
     if (error != null) {
       if (mounted) {
         CustomSnackBar.show(context, message: error, isError: true);

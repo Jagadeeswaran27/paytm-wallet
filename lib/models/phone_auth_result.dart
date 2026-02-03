@@ -1,3 +1,5 @@
+import 'package:firebase_auth/firebase_auth.dart';
+
 class PhoneAuthResult {
   const PhoneAuthResult();
 }
@@ -11,4 +13,9 @@ class CodeSent extends PhoneAuthResult {
 class PhoneAuthError extends PhoneAuthResult {
   final String message;
   const PhoneAuthError(this.message);
+}
+
+class PhoneAuthCompleted extends PhoneAuthResult {
+  final PhoneAuthCredential credential;
+  const PhoneAuthCompleted(this.credential);
 }
